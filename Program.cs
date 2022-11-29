@@ -109,7 +109,7 @@ namespace Tetris_cs
 		{
 			for (int i = 0; i < 16; i++)
 			{
-                if (tetrominos.get_tetromino()[])
+               // if (tetrominos.get_tetromino()[])
 			}
             return false;
 		}
