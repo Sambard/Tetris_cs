@@ -1,42 +1,4 @@
 ﻿
-/*//////////////////////////////////////////  I
-tetrominos[0] = ("XXXX" +
-                    "...." +
-                    "...." +
-                    "....");
-//////////////////////////////////////////  T
-tetrominos[1] = ("..X." +
-                    ".XXX" +
-                    "...." +
-                    "....");
-//////////////////////////////////////////  O
-tetrominos[2] = (".XX." +
-                    ".XX." +
-                    "...." +
-                    "....");
-//////////////////////////////////////////  Z
-tetrominos[3] = (".XX." +
-                    "..XX" +
-                    "...." +
-                    "....");
-//////////////////////////////////////////  S
-tetrominos[4] = ("..XX" +
-                    ".XX." +
-                    "...." +
-                    "....");
-//////////////////////////////////////////  L
-tetrominos[5] = ("...X" +
-                    ".XXX" +
-                    "...." +
-                    "....");
-//////////////////////////////////////////  J
-tetrominos[6] = (".X.." +
-                    ".XXX" +
-                    "...." +
-                    "....");
-//////////////////////////////////////////*/
-
-
 using System.Diagnostics;
 using System;
 
@@ -59,9 +21,11 @@ namespace Tetris_cs
             Console.SetBufferSize(i_Field_Width + 8, i_Field_Height + 2);
             Console.CursorVisible = false;
             change_C_Tetrominos(rand.Next(7));
+            print_Border();
             fill_Field();
-            print_Field();
-            int num = 0;
+            Print_Tetromino(c_block);
+           // print_Field();
+         //   int num = 0;
             game_loop();
 /*            TimerCallback tm = new TimerCallback(game_loop);
             Timer timer = new Timer(tm, num, 0, 2000);*/
@@ -72,16 +36,37 @@ namespace Tetris_cs
             var sw = new Stopwatch();
             while (!b_Game_Over)
             {
-                Console.Clear();
-                print_Field();
+                //Console.Clear();
+                //print_Field();
+                Print_Tetromino(c_block);
+
                 sw.Restart();
                 while (sw.ElapsedMilliseconds <= i_Frame_Ms)
                 {
                     if (Read_Movement() == 1)
                       break;
                 }
+                Print_Tetromino(' ');
                 tetrominos.set_x(tetrominos.get_x() + i_Field_Width);
             }
+		}
+
+        static void Print_Tetromino(char c)
+		{
+			for (int i = 0; i < 16; i++)
+			{
+                if (tetrominos.get_tetromino()[i] == 'X')
+				{
+                    if (tetrominos.get_x() + i / 4 * i_Field_Width + i % 4 == 'X')
+					{
+                        b_Game_Over = true;
+                        return;//конец игры
+					}
+                    Console.ForegroundColor = tetrominos.get_Color();
+                    Console.SetCursorPosition(1 + tetrominos.get_x() % i_Field_Width + i % 4, tetrominos.get_x() / i_Field_Width + i / 4 );
+                    Console.Write(c);
+                }
+			}
 		}
 
         static int Read_Movement()
@@ -96,6 +81,12 @@ namespace Tetris_cs
                 case ConsoleKey.A:
                     break;
                 case ConsoleKey.D:
+                    if (Move_To_The_Right())
+                    {
+                        Print_Tetromino(' ');
+                        tetrominos.set_x(tetrominos.get_x() + 1);
+                        Print_Tetromino(c_block);
+                    }
                     break;
                 case ConsoleKey.Q:
                     break;
@@ -105,16 +96,35 @@ namespace Tetris_cs
             return 0;
         }
 
-        static bool to_the_Right()
+        static bool Move_To_The_Right()
 		{
+            int t = 0;
 			for (int i = 0; i < 16; i++)
-			{
-               // if (tetrominos.get_tetromino()[])
-			}
+                if (tetrominos.get_tetromino()[i] == 'X' && Field[tetrominos.get_x() + i / 4 * i_Field_Width + i % 4 + 1].get_Block() != 'X' && (tetrominos.get_x() + i / 4 * i_Field_Width + i % 4) % i_Field_Width != i_Field_Width - 1)
+                    t++;  
+            if (t == 4)
+                return true;
             return false;
 		}
 
-        static void print_Field()
+        static void print_Border()
+		{
+            Console.ForegroundColor = ConsoleColor.White;
+            for (int i = 0; i < i_Field_Height + 1; i++)
+			{
+                Console.SetCursorPosition(0, i);
+                Console.Write(c_block);
+                Console.SetCursorPosition(i_Field_Width + 1, i);
+                Console.Write(c_block);
+            }
+			for (int i = 0; i < i_Field_Width + 2; i++)
+			{
+                Console.SetCursorPosition(i, i_Field_Height + 1);
+                Console.Write(c_block);
+            }
+        }
+
+      /*  static void print_Field()
 		{
 			for (int i = 0; i < i_Field_Height * i_Field_Width; i++)
 			{
@@ -141,7 +151,7 @@ namespace Tetris_cs
 			for (int i = 0; i < i_Field_Width + 2; i++)
                 Console.Write(c_block);
             Console.Write('\n');
-        }
+        }*/
 
         static void fill_Field()
         {
