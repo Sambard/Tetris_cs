@@ -10,6 +10,8 @@ namespace Tetris_cs
         const int               i_Field_Width           = 10;
         const char              c_block                 = '█';
         const int               i_Frame_Ms              = 2000;
+        const int               i_Indent                = 6;
+        const int               i_block_size            = 1;
         static bool             b_Game_Over             = false;
         static C_Tetrominos     tetrominos              = new C_Tetrominos();
         static C_Block[]        Field                   = new C_Block[i_Field_Height * i_Field_Width];
@@ -17,27 +19,22 @@ namespace Tetris_cs
 
         static void Main(string[] args)
         {
-            Console.SetWindowSize(i_Field_Width + 8, i_Field_Height + 2);
-            Console.SetBufferSize(i_Field_Width + 8, i_Field_Height + 2);
+            Console.SetWindowSize(i_Field_Width + i_Indent * 2, i_Field_Height + i_Indent);
+            Console.SetBufferSize(i_Field_Width + i_Indent * 2, i_Field_Height + i_Indent);
+            Console.Title = "TETRIS";
             Console.CursorVisible = false;
             change_C_Tetrominos(rand.Next(7));
             print_Border();
             fill_Field();
             Print_Tetromino(c_block);
-           // print_Field();
-         //   int num = 0;
             game_loop();
-/*            TimerCallback tm = new TimerCallback(game_loop);
-            Timer timer = new Timer(tm, num, 0, 2000);*/
         }
 
-        static void game_loop(/*object obj*/)
+        static void game_loop()
 		{
             var sw = new Stopwatch();
             while (!b_Game_Over)
             {
-                //Console.Clear();
-                //print_Field();
                 Print_Tetromino(c_block);
 
                 sw.Restart();
@@ -46,24 +43,84 @@ namespace Tetris_cs
                     if (Read_Movement() == 1)
                       break;
                 }
-                Print_Tetromino(' ');
-                tetrominos.set_x(tetrominos.get_x() + i_Field_Width);
+                if (Move_To_The_Down())
+                {
+                    Print_Tetromino(' ');
+                    if (!Tetromino_To_The_Down())
+                        tetrominos.set_x(tetrominos.get_x() + i_Field_Width);
+                    Print_Tetromino(c_block);
+                }
+                else
+                {
+					for (int i = 0; i < 16; i++)
+					{
+                        if (tetrominos.get_tetromino()[i] == 'X')
+						{
+                            Field[tetrominos.get_x() + i / 4 * i_Field_Width + i % 4].set_Block('X');
+                            Field[tetrominos.get_x() + i / 4 * i_Field_Width + i % 4].set_Color(tetrominos.get_Color());
+                        }
+					}
+					for (int i = 0; i < i_Field_Height; i++)
+					{
+                        int t = 0;
+						for (int j = 0; j < i_Field_Width; j++)
+                            if (Field[i * i_Field_Width + j].get_Block() == 'X')
+                                t++;
+                        if (t == i_Field_Width)
+                        {
+                            Console.ForegroundColor = ConsoleColor.White;
+                                for (int j = 0; j < i_Field_Width; j++)
+                                {
+                                    Console.SetCursorPosition(i_Indent + (i * i_Field_Width + j) % i_Field_Width, (i * i_Field_Width + j) / i_Field_Width);
+                                    Console.Write(' ');
+                                }
+                                //score посчииать
+							for (int j = i * i_Field_Width - 1; j > -1; j--)
+							{
+                                Field[j + i_Field_Width].set_Block(Field[j].get_Block());
+                                Field[j + i_Field_Width].set_Color(Field[j].get_Color());
+                                Field[j].set_Block(' ');
+                                Field[j].set_Color(ConsoleColor.White);
+							}
+                            Print_Field();
+                        }
+                    }
+                    change_C_Tetrominos(rand.Next(7));
+                }
             }
 		}
 
+        static void Print_Field()
+		{
+            for (int i = 0; i < i_Field_Width * i_Field_Height - 1; i++)
+            {
+                Console.ForegroundColor = Field[i].get_Color();
+                Console.SetCursorPosition(i_Indent + i % i_Field_Width, i / i_Field_Width);
+                if (Field[i].get_Block() == 'X')
+                    Console.Write(c_block);
+                else
+                    Console.Write(' ');
+            }
+        }
+
         static void Print_Tetromino(char c)
 		{
-			for (int i = 0; i < 16; i++)
+            Console.ForegroundColor = tetrominos.get_Color();
+            for (int i = 0; i < 16; i++)
 			{
                 if (tetrominos.get_tetromino()[i] == 'X')
 				{
-                    if (tetrominos.get_x() + i / 4 * i_Field_Width + i % 4 == 'X')
+                    if (Field[tetrominos.get_x() + i / 4 * i_Field_Width + i % 4].get_Block() == 'X')
 					{
                         b_Game_Over = true;
+                        Console.Clear();
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        Console.ForegroundColor = ConsoleColor.Black;
+                        Console.WriteLine("GAME_OVER");
+                        Console.ReadLine();
                         return;//конец игры
 					}
-                    Console.ForegroundColor = tetrominos.get_Color();
-                    Console.SetCursorPosition(1 + tetrominos.get_x() % i_Field_Width + i % 4, tetrominos.get_x() / i_Field_Width + i / 4 );
+                    Console.SetCursorPosition(i_Indent + tetrominos.get_x() % i_Field_Width + i % 4, tetrominos.get_x() / i_Field_Width + i / 4 );
                     Console.Write(c);
                 }
 			}
@@ -79,12 +136,20 @@ namespace Tetris_cs
                 case ConsoleKey.S:
                     return 1;
                 case ConsoleKey.A:
+                    if (Move_To_The_Left())
+                    {
+                        Print_Tetromino(' ');
+                        if (!Tetromino_To_The_Left())
+                            tetrominos.set_x(tetrominos.get_x() - 1);
+                        Print_Tetromino(c_block);
+                    }
                     break;
                 case ConsoleKey.D:
                     if (Move_To_The_Right())
                     {
                         Print_Tetromino(' ');
-                        tetrominos.set_x(tetrominos.get_x() + 1);
+                        if (!Tetromino_To_The_Right())
+                            tetrominos.set_x(tetrominos.get_x() + 1);
                         Print_Tetromino(c_block);
                     }
                     break;
@@ -96,62 +161,127 @@ namespace Tetris_cs
             return 0;
         }
 
+        static bool Move_To_The_Down()
+        {
+            int t = 0;
+            for (int i = 0; i < 16; i++)
+                if (tetrominos.get_tetromino()[i] == 'X' &&
+                    (tetrominos.get_x() + i / 4 * i_Field_Width + i % 4) / i_Field_Width < i_Field_Height - 1 &&
+                    Field[tetrominos.get_x() + i / 4 * i_Field_Width + i % 4 + i_Field_Width].get_Block() != 'X')
+                            t++;
+            if (t == 4)
+                return true;
+            return false;
+        }
+
+        static bool Tetromino_To_The_Down()
+        {
+            if (tetrominos.get_tetromino()[12] != 'X' &&
+                tetrominos.get_tetromino()[13] != 'X' &&
+                tetrominos.get_tetromino()[14] != 'X' &&
+                tetrominos.get_tetromino()[15] != 'X')
+            {
+                char[] tet = tetrominos.get_tetromino().ToCharArray();
+                for (int i = 15; i > -1; i--)
+                {
+                    if (tet[i] == 'X')
+                    {
+                        tet[i] = '.';
+                        tet[i + 4] = 'X';
+                    }
+                }
+                tetrominos.set_tetromino(new string(tet));
+                return true;
+            }
+            return false;
+        }
+
         static bool Move_To_The_Right()
 		{
             int t = 0;
 			for (int i = 0; i < 16; i++)
-                if (tetrominos.get_tetromino()[i] == 'X' && Field[tetrominos.get_x() + i / 4 * i_Field_Width + i % 4 + 1].get_Block() != 'X' && (tetrominos.get_x() + i / 4 * i_Field_Width + i % 4) % i_Field_Width != i_Field_Width - 1)
+                if (tetrominos.get_tetromino()[i] == 'X' &&
+                    (tetrominos.get_x() + i / 4 * i_Field_Width + i % 4) % i_Field_Width != i_Field_Width - 1 &&
+                    Field[tetrominos.get_x() + i / 4 * i_Field_Width + i % 4 + 1].get_Block() != 'X')
                     t++;  
             if (t == 4)
                 return true;
             return false;
 		}
 
+        static bool Tetromino_To_The_Right()
+		{
+            if (tetrominos.get_tetromino()[3] != 'X' && 
+                tetrominos.get_tetromino()[7] != 'X' && 
+                tetrominos.get_tetromino()[11] != 'X' && 
+                tetrominos.get_tetromino()[15] != 'X')
+			{
+                char [] tet = tetrominos.get_tetromino().ToCharArray();
+				for (int i = 15; i > -1; i--)
+				{
+                    if (tet[i] == 'X')
+					{
+                        tet[i] = '.';
+                        tet[i + 1] = 'X';
+					}
+				}
+                tetrominos.set_tetromino(new string(tet));
+                return true;
+            }
+            return false;
+		}
+
+        static bool Move_To_The_Left()
+        {
+            int t = 0;
+            for (int i = 0; i < 16; i++)
+                    if (tetrominos.get_tetromino()[i] == 'X' &&
+                    (tetrominos.get_x() + i / 4 * i_Field_Width + i % 4) % i_Field_Width != 0 &&
+                    Field[tetrominos.get_x() + i / 4 * i_Field_Width + i % 4 - 1].get_Block() != 'X')
+                    t++;
+            if (t == 4)
+                return true;
+            return false;
+        }
+
+        static bool Tetromino_To_The_Left()
+        {
+            if (tetrominos.get_tetromino()[0] != 'X' &&
+                tetrominos.get_tetromino()[4] != 'X' &&
+                tetrominos.get_tetromino()[8] != 'X' &&
+                tetrominos.get_tetromino()[12] != 'X')
+            {
+                char[] tet = tetrominos.get_tetromino().ToCharArray();
+                for (int i = 0; i < 16; i++)
+                {
+                    if (tet[i] == 'X')
+                    {
+                        tet[i] = '.';
+                        tet[i - 1] = 'X';
+                    }
+                }
+                tetrominos.set_tetromino(new string(tet));
+                return true;
+            }
+            return false;
+        }
+
         static void print_Border()
 		{
             Console.ForegroundColor = ConsoleColor.White;
-            for (int i = 0; i < i_Field_Height + 1; i++)
+            for (int i = 0; i < i_Field_Height; i++)
 			{
-                Console.SetCursorPosition(0, i);
+                Console.SetCursorPosition(i_Indent - i_block_size, i);
                 Console.Write(c_block);
-                Console.SetCursorPosition(i_Field_Width + 1, i);
+                Console.SetCursorPosition(i_Indent - i_block_size + i_Field_Width + 1, i);
                 Console.Write(c_block);
             }
 			for (int i = 0; i < i_Field_Width + 2; i++)
 			{
-                Console.SetCursorPosition(i, i_Field_Height + 1);
+                Console.SetCursorPosition(i_Indent - i_block_size + i, i_Field_Height);
                 Console.Write(c_block);
             }
         }
-
-      /*  static void print_Field()
-		{
-			for (int i = 0; i < i_Field_Height * i_Field_Width; i++)
-			{
-                if (i % i_Field_Width == 0)
-                    Console.Write(c_block);
-                if (tetrominos.get_x() <= i && i <= tetrominos.get_x() + 3  && tetrominos.get_tetromino()[i - tetrominos.get_x()] == 'X' ||
-                    tetrominos.get_x() + i_Field_Width <= i && i <= tetrominos.get_x() + i_Field_Width + 3 && tetrominos.get_tetromino()[i - (tetrominos.get_x() + i_Field_Width) + 4] == 'X' ||
-                    tetrominos.get_x() + i_Field_Width * 2 <= i && i <= tetrominos.get_x() + i_Field_Width * 2 + 3 && tetrominos.get_tetromino()[i - (tetrominos.get_x() + i_Field_Width * 2) + 4 * 2] == 'X' ||
-                    tetrominos.get_x() + i_Field_Width * 3 <= i && i <= tetrominos.get_x() + i_Field_Width * 3 + 3 && tetrominos.get_tetromino()[i - (tetrominos.get_x() + i_Field_Width * 3) + 4 * 3] == 'X')
-                {
-                    Console.ForegroundColor = tetrominos.get_Color();
-                    Console.Write(c_block);
-                    Console.ForegroundColor = ConsoleColor.White;
-                }
-                else
-                {
-                    Console.ForegroundColor = Field[i].get_Color();
-                    Console.Write(Field[i].get_Block());
-                    Console.ForegroundColor = ConsoleColor.White;
-                }
-                if (i % i_Field_Width == i_Field_Width - 1)
-                    Console.WriteLine(c_block);
-            }
-			for (int i = 0; i < i_Field_Width + 2; i++)
-                Console.Write(c_block);
-            Console.Write('\n');
-        }*/
 
         static void fill_Field()
         {
