@@ -154,13 +154,39 @@ namespace Tetris_cs
                     }
                     break;
                 case ConsoleKey.Q:
+                    Rotate_to_the_Left();
                     break;
                 case ConsoleKey.E:
+                    Rotate_to_the_Right();
                     break;
             }
             return 0;
         }
 
+        static bool Rotate_to_the_Right()
+		{
+            char[] tet = tetrominos.get_tetromino().ToCharArray();
+            for (int i = 0; i < 16; i++)
+                tet[i % 4 * 4 + 3 - i / 4] = tetrominos.get_tetromino()[i];
+            Print_Tetromino(' ');
+            tetrominos.set_tetromino(new string(tet));
+            Print_Tetromino(c_block);
+            return false;
+		}
+        /// <summary>
+        /// ///////////////////////////////////////////////////////////////////////////////////////// Доделать повороты
+        /// </summary>
+        /// <returns></returns>
+        static bool Rotate_to_the_Left()
+        {
+            char[] tet = tetrominos.get_tetromino().ToCharArray();
+            for (int i = 0; i < 16; i++)
+                tet[(3 - i % 4) * 4 + i / 4] = tetrominos.get_tetromino()[i];
+            Print_Tetromino(' ');
+            tetrominos.set_tetromino(new string(tet));
+            Print_Tetromino(c_block);
+            return false;
+        }
         static bool Move_To_The_Down()
         {
             int t = 0;
