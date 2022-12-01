@@ -23,9 +23,12 @@ namespace Tetris_cs
             Console.SetBufferSize(i_Field_Width + i_Indent * 2, i_Field_Height + i_Indent);
             Console.Title = "TETRIS";
             Console.CursorVisible = false;
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Black;
             change_C_Tetrominos(rand.Next(7));
             print_Border();
             fill_Field();
+            Print_Field();
             Print_Tetromino(c_block);
             game_loop();
         }
@@ -92,7 +95,7 @@ namespace Tetris_cs
 
         static void Print_Field()
 		{
-            for (int i = 0; i < i_Field_Width * i_Field_Height - 1; i++)
+            for (int i = 0; i < i_Field_Width * i_Field_Height; i++)
             {
                 Console.ForegroundColor = Field[i].get_Color();
                 Console.SetCursorPosition(i_Indent + i % i_Field_Width, i / i_Field_Width);
@@ -168,10 +171,13 @@ namespace Tetris_cs
             char[] tet = tetrominos.get_tetromino().ToCharArray();
             for (int i = 0; i < 16; i++)
                 tet[i % 4 * 4 + 3 - i / 4] = tetrominos.get_tetromino()[i];
+            for (int i = 0; i < 16; i++)
+                if (Field[tetrominos.get_x() + i % 4 + i / 4 * i_Field_Width].get_Block() == 'X' && tet[i] == 'X')
+                    return false;
             Print_Tetromino(' ');
             tetrominos.set_tetromino(new string(tet));
             Print_Tetromino(c_block);
-            return false;
+            return true;
 		}
         /// <summary>
         /// ///////////////////////////////////////////////////////////////////////////////////////// Доделать повороты
@@ -182,10 +188,13 @@ namespace Tetris_cs
             char[] tet = tetrominos.get_tetromino().ToCharArray();
             for (int i = 0; i < 16; i++)
                 tet[(3 - i % 4) * 4 + i / 4] = tetrominos.get_tetromino()[i];
-            Print_Tetromino(' ');
+            for (int i = 0; i < 16; i++)
+                if (Field[tetrominos.get_x() + i % 4 + i / 4 * i_Field_Width].get_Block() == 'X' && tet[i] == 'X')
+                    return false;
+                Print_Tetromino(' ');
             tetrominos.set_tetromino(new string(tet));
             Print_Tetromino(c_block);
-            return false;
+            return true;
         }
         static bool Move_To_The_Down()
         {
